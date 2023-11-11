@@ -1,16 +1,24 @@
-#include <vector>
+/// <summary>
+/// The current state of the game.
+/// </summary>
+enum State { Starting, Active, Ending };
+
+/// <summary>
+/// The game events emitted during gameplay.
+/// </summary>
+enum Event { onChangedState, onNewPattern, onGameEnded };
 
 class MemoryGame {
 private:
-	std::vector<int> pattern = {};
+	int* pattern = int[200];
+  int patternLength = 0;
 	int compareIndex = 0;
-	MemoryGame::State gameState = State::Starting;
+	State gameState = Starting;
 
 	/// <summary>
-	/// Appends an extra step to the existing pattern and returns as an integer array.
+	/// Appends a step to the pattern.
 	/// </summary>
-	/// <returns>The new pattern as an integer array.</returns>
-	int* getNextPattern();
+	void getNextPattern();
 
 	/// <summary>
 	/// Processes an input and progresses the game.
@@ -25,27 +33,17 @@ private:
 
 	template <typename T> class GameEvent {
 	private:
-		std::vector<void (*)(T)> observers;
+		void (*)(T) observers;
 	public:
 		void registerObserver(void (*func)(T));
 		void detachObserver(void (*func)(T));
 		void notifyAllObservers(T data);
 	};
 
-	GameEvent<MemoryGame::State> changedState;
-	GameEvent<int*> newPattern;
+	GameEvent<State> changedState;
+	GameEvent<int*, int> newPattern;
 	GameEvent<int> gameEnded;
 public:
-	/// <summary>
-	/// The current state of the game.
-	/// </summary>
-	enum class State { Starting, Active, Ending };
-
-	/// <summary>
-	/// The game events emitted during gameplay.
-	/// </summary>
-	enum class Event { onChangedState, onNewPattern, onGameEnded };
-
 	/// <summary>
 	/// Starts the game.
 	/// </summary>
