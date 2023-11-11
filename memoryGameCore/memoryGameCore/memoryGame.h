@@ -1,3 +1,9 @@
+#ifndef MEMORYGAME_H
+#define MEMORYGAME_H
+
+
+#include <stdlib.h>
+
 /// <summary>
 /// The current state of the game.
 /// </summary>
@@ -8,12 +14,16 @@ enum State { Starting, Active, Ending };
 /// </summary>
 enum Event { onChangedState, onNewPattern, onGameEnded };
 
+struct Pattern {
+	int values[200] = {};
+	int length = 0;
+};
+
 class MemoryGame {
 private:
-	int* pattern = int[200];
-  int patternLength = 0;
+	Pattern pattern;
 	int compareIndex = 0;
-	State gameState = Starting;
+	State state = Starting;
 
 	/// <summary>
 	/// Appends a step to the pattern.
@@ -33,15 +43,23 @@ private:
 
 	template <typename T> class GameEvent {
 	private:
-		void (*)(T) observers;
+		void (*observer)(T) = nullptr;
 	public:
-		void registerObserver(void (*func)(T));
-		void detachObserver(void (*func)(T));
-		void notifyAllObservers(T data);
+		/// <summary>
+		/// Sets the observer for this game event.
+		/// </summary>
+		/// <param name="event">The event to set the observer to.</param>
+		void registerObserver(void (*onEvent)(T));
+
+		/// <summary>
+		/// Notifies the observer that this event has occured.
+		/// </summary>
+		/// <param name="data">The relevant data to pass to the observer.</param>
+		void notifyObserver(T data);
 	};
 
 	GameEvent<State> changedState;
-	GameEvent<int*, int> newPattern;
+	GameEvent<Pattern*> newPattern;
 	GameEvent<int> gameEnded;
 public:
 	/// <summary>
@@ -57,18 +75,12 @@ public:
 	bool input(int value);
 
 	/// <summary>
-	/// Attaches an observer to a specified game event.
+	/// Sets the observer to a specified game event.
 	/// </summary>
-	/// <param name="event">The event to attach the observer to.</param>
+	/// <param name="event">The event to set the observer to.</param>
 	/// <param name="onEvent">The event handler.</param>
 	/// <returns>True if successful.</returns>
-	bool registerObserver(Event event, void (*onEvent)(auto));
-
-	/// <summary>
-	/// Detaches an observer from a specified game event.
-	/// </summary>
-	/// <param name="event">The event to detach the observer from.</param>
-	/// <param name="onEvent">The event handler.</param>
-	/// <returns>True if successful.</returns>
-	bool detachObserver(Event event, void (*onEvent)(auto));
+	template <typename T> bool registerObserver(Event event, void (*onEvent)(T));
 };
+
+#endif // MEMORYGAME_H
