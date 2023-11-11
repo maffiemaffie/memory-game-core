@@ -1,46 +1,47 @@
 #include <iostream>
-#include "memoryGame.h"
+#include "MemoryGame.h"
 
 using namespace std;
 
 State currentState;
 
-void displayPattern(Pattern* pattern) {
-	for (int i = 0; i < pattern->length; i++) {
-		cout << pattern->values[i] << endl;
-	}
+void displayPattern(NewPatternEventArgs event) {
+    for (int i = 0; i < event.pattern->length; i++) {
+        cout << event.pattern->values[i] << endl;
+    }
 }
 
-void changeState(State state) {
-	currentState = state;
+void changeState(ChangedStateEventArgs event) {
+    currentState = event.state;
 }
 
-void gameOver(int score) {
-	cout << "Game over, your score: " << score << endl;
+void gameOver(GameEndedEventArgs event) {
+    cout << "Game over, your score: " << event.score << endl;
 }
 
 int main() {
-	MemoryGame game;
+    srand(time(nullptr));
+    MemoryGame game;
 
-	game.registerObserver(onNewPattern, &displayPattern);
-	game.registerObserver(onChangedState, &changeState);
-	game.registerObserver(onGameEnded, &gameOver);
+    game.registerNewPatternObserver(&displayPattern);
+    game.registerChangedStateObserver(&changeState);
+    game.registerGameEndedObserver(&gameOver);
 
-	cout << "Let's play a game!" << endl;
-	cout << "Start? ";
+    cout << "Let's play a game!" << endl;
+    cout << "Start? ";
 
-	char response;
-	cin >> response;
+    char response;
+    cin >> response;
 
-	if (response != 'y') return 0;
-	game.start();
+    if (response != 'y') return 0;
+    game.start();
 
-	while (currentState == Active) {
-		char nextInput;
-		cin >> nextInput;
+    while (currentState == Active) {
+        char nextInput;
+        cin >> nextInput;
 
-		game.input(nextInput - '0');
-	}
+        game.input(nextInput - '0');
+    }
 
-	return 0;
+    return 0;
 }
