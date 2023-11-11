@@ -4,7 +4,8 @@ void MemoryGame::start() {
 	state = MemoryGame::State::Starting;
 	changedState.notifyAllObservers(state);
 	compareIndex = 0;
-	pattern = {};
+	pattern = int[256];
+  patternLength = 0;
 
 	state = MemoryGame::State::Active;
 	changedState.notifyAllObservers(state);
@@ -46,16 +47,11 @@ bool MemoryGame::detachObserver(Event event, void (*onEvent)(auto)) {
 	return true;
 }
 
-int* MemoryGame::getNextPattern() {
+void MemoryGame::getNextPattern() {
 	int nextValue = rand() * 4 / RAND_MAX;
-	pattern.push_back(nextValue);
+	pattern[patternLength++] = nextValue;
 
-	int* patternArray = new int[pattern.size()];
-	for (int i = 0; i < pattern.size(); i++) {
-		patternArray[i] = pattern.at(i);
-	}
-
-	return patternArray;
+  newPattern.notifyAllObservers(pattern, patternLength);
 }
 
 bool MemoryGame::input(int value) {
@@ -68,18 +64,18 @@ bool MemoryGame::input(int value) {
 
 void MemoryGame::processNextInput(int input) {
 	// check that pattern is correct
-	if (pattern.at(compareIndex) == input) compareIndex++;
+	if (pattern[compareIndex] == input) compareIndex++;
 	else return end();
 
 	// continue game
-	if (compareIndex == pattern.size()) {
+	if (compareIndex == patternLength) {
 		compareIndex = 0;
-		newPattern.notifyAllObservers(getNextPattern());
+		getNextPattern();
 	}
 }
 
 void MemoryGame::end() {
 	state = MemoryGame::State::Ending;
 	changedState.notifyAllObservers(state);
-	gameEnded.notifyAllObservers(pattern.size());
+	gameEnded.notifyAllObservers(patternLength);
 }
