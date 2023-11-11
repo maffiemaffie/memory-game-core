@@ -1,74 +1,94 @@
-#include "memoryGame.h"
+/**
+ * @file memoryGame.cpp
+ * @author Elia Cohen
+ * @brief Source file contains all the core functionality for the memory game.
+ * @version 0.1
+ * @date 2023-11-11
+ */
+
+#include "MemoryGame.h"
 
 template <typename T> void MemoryGame::GameEvent<T>::registerObserver(void (*onEvent)(T)) {
-	observer = onEvent;
+    observer = onEvent;
 }
 
-template <typename T> void MemoryGame::GameEvent<T>::notifyObserver(T data) {
-	observer(data);
+// template void MemoryGame::GameEvent<ChangedStateEventArgs>::registerObserver(void (*)(ChangedStateEventArgs));
+// template void MemoryGame::GameEvent<NewPatternEventArgs>::registerObserver(void (*)(NewPatternEventArgs));
+// template void MemoryGame::GameEvent<GameEndedEventArgs>::registerObserver(void (*)(GameEndedEventArgs));
+
+template <typename T> void MemoryGame::GameEvent<T>::notifyObserver(T event) {
+    observer(event);
 }
 
 void MemoryGame::start() {
-	state = Starting;
-	changedState.notifyObserver(state);
-	compareIndex = 0;
-	pattern.length = 0;
+    state = Starting;
+    ChangedStateEventArgs event;
+    event.state = state;
+    changedState.notifyObserver(event);
+    compareIndex = 0;
+    pattern.length = 0;
 
-	state = Active;
-	changedState.notifyObserver(state);
-	getNextPattern();
+    state = Active;
+    event.state = state;
+    changedState.notifyObserver(event);
+    getNextPattern();
 }
 
-template <typename T> bool MemoryGame::registerObserver(Event event, void (*onEvent)(T)) {
-	switch (event) {
-	case onChangedState:
-		changedState.registerObserver(onEvent);
-		break;
-	case onGameEnded:
-		gameEnded.registerObserver(onEvent);
-		break;
-	case onNewPattern:
-		newPattern.registerObserver(onEvent);
-		break;
-	default:
-		return false;
-	}
-	return true;
+void MemoryGame::registerChangedStateObserver(void (*onChangedState)(ChangedStateEventArgs)) {
+    changedState.registerObserver(onChangedState);
 }
 
-template bool MemoryGame::registerObserver<Pattern*>(Event, void (*)(Pattern*));
-template bool MemoryGame::registerObserver<State>(Event, void (*)(State));
-template bool MemoryGame::registerObserver<int>(Event, void (*)(int));
+void MemoryGame::registerNewPatternObserver(void (*onNewPattern)(NewPatternEventArgs)) {
+    newPattern.registerObserver(onNewPattern);
+}
+
+void MemoryGame::registerGameEndedObserver(void (*onGameEnded)(GameEndedEventArgs)) {
+    gameEnded.registerObserver(onGameEnded);
+}
 
 void MemoryGame::getNextPattern() {
-	int nextValue = rand() * 4 / RAND_MAX;
-	pattern.values[pattern.length++] = nextValue;
+    long random = rand();
+    random = rand();
+    int nextValue = random * 4 / RAND_MAX;
+    pattern.values[pattern.length++] = nextValue;
 
-	newPattern.notifyObserver(&pattern);
+    NewPatternEventArgs event;
+    event.pattern = &pattern;
+    newPattern.notifyObserver(event);
 }
 
 bool MemoryGame::input(int value) {
-	if (state != Active) return false; // not ready for input
-	if (value < 0 || value > 3) return false; // out of range
+    if (state != Active) return false; // not ready for input
+    if (value < 0 || value > 3) return false; // out of range
 
-	processNextInput(value);
-	return true;
+    processNextInput(value);
+    return true;
 }
 
 void MemoryGame::processNextInput(int input) {
-	// check that pattern is correct
-	if (pattern.values[compareIndex] == input) compareIndex++;
-	else return end();
+    // check that pattern is correct
+    if (pattern.values[compareIndex] == input) {
+        compareIndex++;
+    } else {
+        end();
+        return;
+    }
 
-	// continue game
-	if (compareIndex == pattern.length) {
-		compareIndex = 0;
-		getNextPattern();
-	}
+    // continue game
+    if (compareIndex == pattern.length) {
+        compareIndex = 0;
+        getNextPattern();
+    }
 }
 
 void MemoryGame::end() {
-	state = Ending;
-	changedState.notifyObserver(state);
-	gameEnded.notifyObserver(pattern.length);
+    state = Ending;
+
+    ChangedStateEventArgs changedStateEventArgs;
+    changedStateEventArgs.state = state;
+    changedState.notifyObserver(changedStateEventArgs);
+
+    GameEndedEventArgs gameEndedEventArgs;
+    gameEndedEventArgs.score = pattern.length - 1;
+    gameEnded.notifyObserver(gameEndedEventArgs);
 }
