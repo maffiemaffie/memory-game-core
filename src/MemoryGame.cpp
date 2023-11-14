@@ -12,12 +12,16 @@ template<typename T> void MemoryGame::GameEvent<T>::registerObserver(void (*onEv
   observer = onEvent;
 }
 
+// template void MemoryGame::GameEvent<ChangedStateEventArgs>::registerObserver(void (*)(ChangedStateEventArgs));
+// template void MemoryGame::GameEvent<NewPatternEventArgs>::registerObserver(void (*)(NewPatternEventArgs));
+// template void MemoryGame::GameEvent<GameEndedEventArgs>::registerObserver(void (*)(GameEndedEventArgs));
+
 template<typename T> void MemoryGame::GameEvent<T>::notifyObserver(T event) {
   observer(event);
 }
 
 void MemoryGame::start() {
-  if (state != Starting) return;
+  if (state == Active) return;
   compareIndex = 0;
   pattern.length = 0;
 
