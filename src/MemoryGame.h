@@ -1,5 +1,5 @@
 /**
- * @file memoryGame.h
+ * @file MemoryGame.h
  * @author Elia Cohen
  * @brief Header file for all the core functionality for the memory game.
  * @version 0.1
@@ -8,7 +8,6 @@
 
 #ifndef MEMORYGAME_H
 #define MEMORYGAME_H
-
 
 #include <stdlib.h>
 
